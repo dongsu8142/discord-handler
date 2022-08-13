@@ -31,6 +31,31 @@ export default class CommandHandler {
         this._commandArray.push(command.data.toJSON());
       }
     }
+    await this._client.application?.commands.set(
+      this._commandArray
+    );
+
+    this._client.on("interactionCreate", async (interaction) => {
+      if (!interaction.isChatInputCommand()) return;
+
+      const command = this._commands.get(
+        interaction.commandName
+      );
+      if (!command) {
+        await interaction.reply({ content: "명령어를 찾을 수 없습니다." });
+        return;
+      }
+
+      try {
+        await command.execute(this._client, interaction);
+      } catch (err) {
+        console.log(err);
+        await interaction.reply({
+          content: "명령을 실행하는 동안 오류가 발생했습니다.",
+          ephemeral: true,
+        });
+      }
+    })
   }
 
   get commands() {
